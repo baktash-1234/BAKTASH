@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>بازی حدس عدد</title>
+<style>
+body {
+    font-family: Arial, sans-serif;
+    text-align: center;
+    background-color: #282c36;
+    color: white;
+    margin: 0;
+    padding: 0;
+}
+
+.game-container {
+    margin-top: 100px;
+    background: #444;
+    padding: 90px;
+    border-radius: 10px;
+    display: inline-block;
+}
+
+.makeh1{
+    font-size: 30px;
+    color: yellow;
+}
+
+.makep{
+    font-size: 23px;
+    font-weight: bold;
+
+}
+
+input {
+    padding: 20px;
+    font-size: 18px;
+    width: 500px;
+}
+
+button {
+    padding: 20px;
+    font-size: 18px;
+    margin-top: 10px;
+    cursor: pointer;
+    background: #ff9800;
+    color: white;
+    border: none;
+    border-radius: 5px;
+}
+
+button:hover {
+    background: #e68900;
+}
+
+#message {
+    margin-top: 10px;
+    font-size: 18px;
+}
+.a{
+     width: 100px;
+     height: 100px;
+     border-radius: 15px;
+     border: 5px solid white;
+     outline:none;
+}
+
+#red{
+            background-color: red;
+}
+#blue{
+            background-color: blue;
+}
+#yellow{
+            background-color: yellow;
+}
+#green{
+            background-color: green;
+}
+.href{
+    color: white;
+    font-size: 25px;
+}
+</style>
+</head>
+<body>
+    <center><h1>رنگ پس زمینه را با دکمه های پایین عوض کن</h1>
+    <input type="button" class="a" id="red" onclick="changecolor('red')"/>
+    <input type="button" class="a" id="yellow" onclick="changecolor('yellow')"/>
+    <input type="button" class="a" id="blue" onclick="changecolor('blue')"/>
+    <input type="button" class="a" id="green" onclick="changecolor('green')"/></center>
+<div class="game-container">
+    
+<h1 class="makeh1">🎯بازی حدس عدد🎯</h1>
+<p class="makep">یک عدد بین 1 تا 100 حدس بزن!</p>
+<input type="number" id="guess-input" placeholder="عدد خود را وارد کنید">
+<button id="check-btn">بررسی</button>
+<p id="message"></p>
+<button id="restart-btn" style="display: none;">دوباره بازی کن</button>
+
+</div>
+<script >
+function changecolor(a) {
+   document.body.style.backgroundColor=a;
+ }
+let randomNumber = Math.floor(Math.random() * 100) + 1;
+let attempts = 0;
+
+document.getElementById("check-btn").addEventListener("click", function() {
+    let userGuess = parseInt(document.getElementById("guess-input").value);
+    let message = document.getElementById("message");
+
+    if (isNaN(userGuess) || userGuess< 1 || userGuess> 100) {
+message.textContent = "❌لطفاً یک عدد بین۱  تا۱۰۰وارد کنید!";
+        return;
+    }
+
+    attempts++;
+
+    if (userGuess === randomNumber) {
+message.textContent = `✅آفرین! عدددرست ${randomNumber} بود. تعداد تلاش ها: ${attempts}`;
+document.getElementById("restart-btn").style.display = "block";
+    } else if (userGuess>randomNumber) {
+message.textContent = "⬇️عدد کوچکتری حدس بزن!";
+    } else {
+message.textContent = "⬆️عدد بزرگتری حدس بزن!";
+    }
+});
+
+document.getElementById("restart-btn").addEventListener("click", function() {
+randomNumber = Math.floor(Math.random() * 100) + 1;
+    attempts = 0;
+document.getElementById("message").textContent = "";
+document.getElementById("restart-btn").style.display = "none";
+document.getElementById("guess-input").value = "";
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>سیستم پرسش و پاسخ</title>
+    <style>
+        /* تنظیمات پایه */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    background-color: #f5f5f5;
+    color: #333;
+    line-height: 1.6;
+    padding: 20px;
+}
+
+header {
+    background-color: #4a6bff;
+    color: white;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+h1, h2 {
+    margin-bottom: 10px;
+}
+
+/* فرم‌ها */
+.form-group {
+    margin-bottom: 15px;
+}
+
+label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+textarea, input[type="text"], input[type="file"] {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px;
+}
+
+textarea {
+    min-height: 100px;
+    resize: vertical;
+}
+
+button {
+    background-color: #4a6bff;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s;
+}
+
+button:hover {
+    background-color: #3a5bef;
+}
+
+/* پست‌ها */
+.posts {
+    margin-top: 30px;
+}
+
+.post {
+    background-color: white;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.post img {
+    max-width: 100%;
+    border-radius: 4px;
+    margin-top: 10px;
+}
+
+.post-meta {
+    color: #666;
+    font-size: 14px;
+    margin-top: 10px;
+    display: flex;
+    justify-content: space-between;
+}
+
+.reply-btn {
+    background-color: #28a745;
+    margin-top: 10px;
+}
+
+.reply-btn:hover {
+    background-color: #218838;
+}
+
+.replies {
+    margin-top: 15px;
+    padding-left: 20px;
+    border-left: 2px solid #eee;
+}
+
+.reply {
+    background-color: #f9f9f9;
+    padding: 10px;
+    border-radius: 4px;
+    margin-top: 10px;
+}
+
+/* مودال */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.4);
+}
+
+.modal-content {
+    background-color: #fefefe;
+    margin: 10% auto;
+    padding: 20px;
+    border-radius: 8px;
+    width: 80%;
+    max-width: 600px;
+}
+
+.close {
+    color: #aaa;
+    float: left;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.close:hover {
+    color: black;
+}
+    </style>
+</head>
+<body>
+    <header>
+        <h1>پرسش و پاسخ تصویری</h1>
+        <p>عکس یا سوال خود را ثبت کنید و پاسخ بگیرید!</p>
+    </header>
+
+    <main>
+        <section class="post-form">
+            <h2>پست جدید</h2>
+            <form id="uploadForm">
+                <div class="form-group">
+                    <label for="postText">متن پست:</label>
+                    <textarea id="postText" placeholder="سوال یا مطلب خود را بنویسید..."></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="postImage">عکس (اختیاری):</label>
+                    <input type="file" id="postImage" accept="image/*">
+                </div>
+                
+                <button type="submit">ارسال پست</button>
+            </form>
+        </section>
+
+        <section class="posts">
+            <h2>پست‌های اخیر</h2>
+            <div id="postsContainer">
+                <!-- پست‌ها اینجا نمایش داده می‌شوند -->
+            </div>
+        </section>
+    </main>
+
+    <!-- مودال برای پاسخ‌دهی -->
+    <div id="replyModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>پاسخ به پست</h2>
+            <form id="replyForm">
+                <input type="hidden" id="replyingTo">
+                <div class="form-group">
+                    <label for="replyText">پاسخ شما:</label>
+                    <textarea id="replyText" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="replyImage">عکس پاسخ (اختیاری):</label>
+                    <input type="file" id="replyImage" accept="image/*">
+                </div>
+                <button type="submit">ارسال پاسخ</button>
+            </form>
+        </div>
+    </div>
+
+
+    <script>
+        // ذخیره پست‌ها در localStorage
+let posts = JSON.parse(localStorage.getItem('posts')) || [];
+
+// DOM Elements
+const uploadForm = document.getElementById('uploadForm');
+const postsContainer = document.getElementById('postsContainer');
+const replyModal = document.getElementById('replyModal');
+const replyForm = document.getElementById('replyForm');
+const closeModal = document.querySelector('.close');
+const replyingToInput = document.getElementById('replyingTo');
+
+// نمایش پست‌ها
+function displayPosts() {
+    postsContainer.innerHTML = '';
+    
+    posts.forEach((post, index) => {
+        const postElement = document.createElement('div');
+        postElement.className = 'post';
+        postElement.dataset.id = index;
+        
+        let postHTML = `
+            <div class="post-content">
+                ${post.text ? `<p>${post.text}</p>` : ''}
+                ${post.image ? `<img src="${post.image}" alt="پست تصویری">` : ''}
+            </div>
+            <div class="post-meta">
+                <span>تاریخ: ${new Date(post.date).toLocaleString('fa-IR')}</span>
+                <button class="reply-btn" data-id="${index}">پاسخ دادن</button>
+            </div>
+        `;
+        
+        if (post.replies && post.replies.length > 0) {
+            postHTML += `<div class="replies">`;
+            post.replies.forEach(reply => {
+                postHTML += `
+                    <div class="reply">
+                        ${reply.text ? `<p>${reply.text}</p>` : ''}
+                        ${reply.image ? `<img src="${reply.image}" alt="پاسخ تصویری" style="max-width: 200px;">` : ''}
+                        <div class="reply-meta">${new Date(reply.date).toLocaleString('fa-IR')}</div>
+                    </div>
+                `;
+            });
+            postHTML += `</div>`;
+        }
+        
+        postElement.innerHTML = postHTML;
+        postsContainer.appendChild(postElement);
+    });
+    
+    // افزودن رویداد به دکمه‌های پاسخ
+    document.querySelectorAll('.reply-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            openReplyModal(this.dataset.id);
+        });
+    });
+}
+
+// باز کردن مودال پاسخ
+function openReplyModal(postId) {
+    replyingToInput.value = postId;
+    replyModal.style.display = 'block';
+}
+
+// بستن مودال پاسخ
+closeModal.addEventListener('click', function() {
+    replyModal.style.display = 'none';
+});
+
+window.addEventListener('click', function(event) {
+    if (event.target === replyModal) {
+        replyModal.style.display = 'none';
+    }
+});
+
+// ارسال پست جدید
+uploadForm.addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const postText = document.getElementById('postText').value;
+    const postImage = document.getElementById('postImage').files[0];
+    
+    if (!postText && !postImage) {
+        alert('لطفاً متن یا عکس وارد کنید!');
+        return;
+    }
+    
+    const newPost = {
+        text: postText,
+        image: null,
+        date: new Date().toISOString(),
+        replies: []
+    };
+    
+    if (postImage) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            newPost.image = e.target.result;
+            savePost(newPost);
+        };
+        reader.readAsDataURL(postImage);
+    } else {
+        savePost(newPost);
+    }
+});
+
+// ذخیره پست
+function savePost(post) {
+    posts.unshift(post); // اضافه کردن به ابتدای آرایه
+    localStorage.setItem('posts', JSON.stringify(posts));
+    uploadForm.reset();
+    displayPosts();
+}
+
+// ارسال پاسخ
+replyForm.addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const postId = replyingToInput.value;
+    const replyText = document.getElementById('replyText').value;
+    const replyImage = document.getElementById('replyImage').files[0];
+    
+    if (!replyText && !replyImage) {
+        alert('لطفاً متن یا عکس وارد کنید!');
+        return;
+    }
+    
+    const newReply = {
+        text: replyText,
+        image: null,
+        date: new Date().toISOString()
+    };
+    
+    if (replyImage) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            newReply.image = e.target.result;
+            saveReply(postId, newReply);
+        };
+        reader.readAsDataURL(replyImage);
+    } else {
+        saveReply(postId, newReply);
+    }
+});
+
+// ذخیره پاسخ
+function saveReply(postId, reply) {
+    if (!posts[postId].replies) {
+        posts[postId].replies = [];
+    }
+    
+    posts[postId].replies.push(reply);
+    localStorage.setItem('posts', JSON.stringify(posts));
+    replyForm.reset();
+    replyModal.style.display = 'none';
+    displayPosts();
+}
+
+
+// بارگذاری اولیه پست‌ها
+displayPosts();
+
+
+
+    </script>
+</body>
+</html>

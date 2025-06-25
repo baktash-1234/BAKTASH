@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ثبت نام و ورود</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f4f4f4;
+            padding: 50px;
+        }
+        .container {
+            width: 300px;
+            background: #fff;
+            padding: 20px;
+            margin: auto;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        input {
+            width: 90%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        button {
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            border: none;
+            border-radius: 5px;
+            background: #28a745;
+            color: white;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #41724c;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>ثبت نام</h2>
+        <input type="text" id="signupUser" placeholder="نام کاربری">
+        <input type="password" id="signupPass" placeholder="رمز عبور">
+        <button onclick="register()">ثبت نام</button>
+        <h2>ورود</h2>
+        <input type="text" id="loginUser" placeholder="نام کاربری">
+        <input type="password" id="loginPass" placeholder="رمز عبور">
+        <button onclick="login()">ورود</button>
+        <p id="message"></p>
+    </div>
+
+    <script>
+        function register() {
+            let user = document.getElementById("signupUser").value;
+            let pass = document.getElementById("signupPass").value;
+            if (user && pass) {
+                localStorage.setItem(user, pass);
+                alert("ثبت نام با موفقیت انجام شد!");
+            } else {
+                alert("لطفاً اطلاعات را کامل وارد کنید!");
+            }
+        }
+
+        function login() {
+            let user = document.getElementById("loginUser").value;
+            let pass = document.getElementById("loginPass").value;
+            let storedPass = localStorage.getItem(user);
+            
+            if (storedPass && storedPass === pass) {
+                document.getElementById("message").innerHTML = "✅ ورود موفقیت‌آمیز بود!";
+                setTimeout(() => {
+                    window.location.href = "index.html?user=" + encodeURIComponent(user);
+                }, 1000);
+            } else {
+                document.getElementById("message").innerHTML = "❌ نام کاربری یا رمز عبور اشتباه است!";
+            }
+        }
+    </script>
+</body>
+</html>

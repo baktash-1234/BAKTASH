@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>سامانه مدیریت بحران ایران</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body { font-family: 'Vazir', sans-serif; direction: rtl; background-color: #f2f2f2; color: #222; margin: 0; padding: 0; transition: background-color 0.3s, color 0.3s; }
+
+body.dark { background-color: #121212; color: #f1f1f1; }
+
+header { background-color: #0077b6; color: white; padding: 1rem; text-align: center; position: sticky; top: 0; z-index: 10; }
+
+header button { margin-top: 10px; padding: 0.5rem 1rem; font-size: 1rem; background-color: #023e8a; color: white; border: none; border-radius: 8px; cursor: pointer; }
+
+main { max-width: 900px; margin: 2rem auto; padding: 1rem; }
+
+section { margin-bottom: 2rem; background-color: white; padding: 1rem; border-radius: 12px; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1); }
+
+body.dark section { background-color: #1e1e1e; }
+
+form label { display: block; margin-bottom: 1rem; }
+
+form input[type="text"], form textarea, form input[type="file"] { width: 100%; padding: 0.5rem; border-radius: 6px; border: 1px solid #ccc; margin-top: 5px; }
+
+form button { padding: 0.7rem 1.5rem; background-color: #00b4d8; color: white; border: none; border-radius: 8px; font-size: 1rem; cursor: pointer; }
+
+.report { margin-top: 1.5rem; border: 1px solid #ccc; border-radius: 8px; padding: 1rem; background-color: #fafafa; }
+
+body.dark .report { background-color: #2a2a2a; }
+
+.report img { width: 100%; max-height: 300px; object-fit: cover; margin-top: 10px; border-radius: 8px; }
+
+.report button { margin-top: 10px; background-color: crimson; color: white; padding: 0.5rem 1rem; border: none; border-radius: 6px; cursor: pointer; }
+
+#search { width: 100%; padding: 0.5rem; font-size: 1rem; margin-bottom: 1rem; border: 1px solid #ccc; border-radius: 6px; }
+
+canvas { max-width: 100%; background: white; border-radius: 10px; padding: 10px; }
+
+
+  </style>
+</head>
+<body>
+  <header>
+    <h1>سامانه مدیریت بحران ایران</h1>
+    <button id="theme-toggle">🌓 تغییر تم</button>
+  </header>
+
+  <main>
+    <section class="report-form">
+      <h2>فرم گزارش حادثه</h2>
+      <form id="reportForm">
+        <label>نوع حادثه:
+          <input type="text" name="type" required>
+        </label>
+        <label>مکان:
+          <input type="text" name="location" required>
+        </label>
+        <label>توضیحات:
+          <textarea name="description" rows="4" required></textarea>
+        </label>
+        <label>آپلود عکس:
+          <input type="file" name="image" accept="image/*" required>
+        </label>
+        <button type="submit">ثبت گزارش</button>
+      </form>
+    </section>
+
+    <section class="report-list">
+      <h2>گزارش‌های ثبت شده</h2>
+      <input type="text" id="search" placeholder="جستجو بر اساس نوع یا مکان حادثه...">
+      <div id="reportContainer"></div>
+    </section>
+
+    <section class="chart-section">
+      <h2>نمودار آماری حوادث</h2>
+      <canvas id="reportChart"></canvas>
+    </section>
+  </main>
+
+  <script>
+    const form = document.getElementById("reportForm");
+    const reportContainer = document.getElementById("reportContainer");
+    const themeToggle = document.getElementById("theme-toggle");
+    const search = document.getElementById("search");
+    const chartCanvas = document.getElementById("reportChart");
+    let reportChart;
+
+    // Load Theme
+    document.body.className = localStorage.getItem("theme") || "light";
+    themeToggle.onclick = () => {
+      document.body.classList.toggle("dark");
+      localStorage.setItem("theme", document.body.classList.contains("dark") ? "dark" : "light");
+    };
+
+    // Load Reports
+    window.addEventListener("load", () => {
+      showReports();
+      drawChart();
+    });
+
+    // Save Report
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const type = form.type.value;
+      const location = form.location.value;
+      const description = form.description.value;
+      const file = form.image.files[0];
+
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = () => {
+        const report = {
+          type,
+          location,
+          description,
+          image: reader.result,
+          timestamp: new Date().toLocaleString("fa-IR")
+        };
+        const reports = JSON.parse(localStorage.getItem("reports") || "[]");
+        reports.push(report);
+        localStorage.setItem("reports", JSON.stringify(reports));
+        form.reset();
+        showReports();
+        drawChart();
+      };
+      reader.readAsDataURL(file);
+    });
+
+    // Show Reports
+    function showReports() {
+      const reports = JSON.parse(localStorage.getItem("reports") || "[]");
+      reportContainer.innerHTML = "";
+      const query = search.value.toLowerCase();
+
+      const filtered = reports.filter(r =>
+        r.type.toLowerCase().includes(query) ||
+        r.location.toLowerCase().includes(query)
+      ).reverse();
+
+      if (filtered.length === 0) {
+        reportContainer.innerHTML = "<p>هیچ گزارشی یافت نشد.</p>";
+        return;
+      }
+      filtered.forEach((report, index) => {
+        const div = document.createElement("div");
+        div.className = "report";
+        div.innerHTML = `
+          <h3>${report.type}</h3>
+          <p><strong>مکان:</strong> ${report.location}</p>
+          <p><strong>توضیحات:</strong> ${report.description}</p>
+          <p><strong>زمان:</strong> ${report.timestamp}</p>
+          <img src="${report.image}" alt="گزارش"/>
+          <button onclick="deleteReport(${reports.length - 1 - index})">🗑 حذف</button>
+        `;
+        reportContainer.appendChild(div);
+      });
+    }
+
+    // Delete Report
+    function deleteReport(index) {
+      const reports = JSON.parse(localStorage.getItem("reports") || "[]");
+      reports.splice(index, 1);
+      localStorage.setItem("reports", JSON.stringify(reports));
+      showReports();
+      drawChart();
+    }
+
+    // Search
+    search.addEventListener("input", showReports);
+
+    // Chart
+    function drawChart() {
+      const reports = JSON.parse(localStorage.getItem("reports") || "[]");
+      const counts = {};
+      reports.forEach(r => {
+        counts[r.type] = (counts[r.type] || 0) + 1;
+      });
+      const labels = Object.keys(counts);
+      const data = Object.values(counts);
+
+      if (reportChart) reportChart.destroy();
+      reportChart = new Chart(chartCanvas, {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [{
+            label: 'تعداد حوادث',
+            data,
+            backgroundColor: '#e63946'
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: { legend: { display: false } },
+          scales: {
+            y: { beginAtZero: true }
+          }
+        }
+      });
+    }
+  </script>
+</body>
+</html>

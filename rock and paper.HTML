@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>بازی سنگ،کاغذ،قیچی</title>
+<style>
+body {
+    font-family: Arial, sans-serif;
+    text-align: center;
+    background: rgb(27, 27, 70);
+    color: white;
+    margin: 0;
+    padding: 0;
+}
+
+.game-container {
+    margin-top: 100px;
+    background: #444;
+    padding: 80px;
+    border-radius: 10px;
+    display: inline-block;
+}
+
+.choices {
+    margin: 20px 0;
+}
+
+.choice {
+    font-size: 20px;
+    padding: 10px 20px;
+    margin: 5px;
+    cursor: pointer;
+    border: none;
+    border-radius: 5px;
+    background: #ff9800;
+    color: white;
+}
+
+.choice:hover {
+    background: #e68900;
+}
+
+#result {
+    font-size: 24px;
+    margin-top: 20px;
+}
+.a{
+     width: 100px;
+     height: 100px;
+     border-radius: 15px;
+     border: 5px solid white;
+     outline:none;
+}
+
+#red{
+            background-color: red;
+}
+#blue{
+            background-color: blue;
+}
+#yellow{
+            background-color: yellow;
+}
+#green{
+            background-color: green;
+}
+.href{
+    color: white;
+    font-size: 25px;
+}
+</style>
+</head>
+<body>
+    <center><h1>رنگ پس زمینه را با دکمه های پایین عوض کن</h1>
+        <input type="button" class="a" id="red" onclick="changecolor('red')"/>
+        <input type="button" class="a" id="yellow" onclick="changecolor('yellow')"/>
+        <input type="button" class="a" id="blue" onclick="changecolor('blue')"/>
+        <input type="button" class="a" id="green" onclick="changecolor('green')"/></center>
+<div class="game-container">
+<h1>✊🤚✌️بازی سنگ،کاغذ،قیچی✊🤚✌️</h1>
+<p>انتخاب کن:</p>
+<div class="choices">
+<button class="choice" id="rock">✊سنگ</button>
+<button class="choice" id="paper">🤚 کاغذ</button>
+<button class="choice" id="scissors">✌️قیچی</button>
+</div>
+<p id="result"></p>
+<p>امتیاز تو: <span id="player-score">0</span> | امتیاز کامپیوتر: <span id="computer-score">0</span></p>
+</div>
+<script>
+function changecolor(a) {
+   document.body.style.backgroundColor=a;
+ }
+const choices = ["rock", "paper", "scissors"];
+let playerScore = 0;
+let computerScore = 0;
+
+document.querySelectorAll(".choice").forEach(button => {
+button.addEventListener("click", function() {
+        let playerChoice = this.id;
+        let computerChoice = choices[Math.floor(Math.random() * choices.length)];
+
+        let result = determineWinner(playerChoice, computerChoice);
+document.getElementById("result").textContent = `       را انتخاب کرد ${computerChoice}  را انتخاب کردی و کامپیوتر ${playerChoice} تو
+تو${result}`;
+
+updateScore(result);
+    });
+});
+
+function determineWinner(player, computer) {
+    if (player === computer) {
+        return "🔄مساوی شد!";
+    } else if (
+        (player === "rock" && computer === "scissors") ||
+        (player === "paper" && computer === "rock") ||
+        (player === "scissors" && computer === "paper")
+    ) {
+playerScore++;
+        return "✅برنده شدی!";
+    } else {
+computerScore++;
+        return "❌کامپیوتر برنده شد!";
+    }
+}
+
+function updateScore(result) {
+document.getElementById("player-score").textContent = playerScore;
+document.getElementById("computer-score").textContent = computerScore;
+}
+</script>
+</body>
+</html>

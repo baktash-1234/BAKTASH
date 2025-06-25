@@ -1,0 +1,2005 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ایران 360° | سفر مجازی به ایران با واقعیت مجازی</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fontiran.com/css/fontiran.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css">
+    
+    
+    <style>
+        /* Reset و تنظیمات پایه */
+        :root {
+            --primary: #FF6B35;
+            --secondary: #004E89;
+            --dark: #1A1A1A;
+            --light: #F7F7F7;
+            --accent: #00A896;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'IRANSans', sans-serif;
+        }
+        
+        body {
+            background-color: var(--light);
+            color: var(--dark);
+            line-height: 1.7;
+            overflow-x: hidden;
+        }
+        
+        /* هدر پیشرفته */
+        header {
+            background: rgba(26, 26, 26, 0.95);
+            backdrop-filter: blur(15px);
+            position: fixed;
+            width: 100%;
+            z-index: 1000;
+            transition: all 0.5s cubic-bezier(0.215, 0.61, 0.355, 1);
+            padding: 1.2rem 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 5px 30px rgba(0, 0, 0, 0.2);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .header-scrolled {
+            padding: 0.8rem 5%;
+            background: rgba(0, 78, 137, 0.98);
+        }
+        
+        .logo {
+            color: white;
+            font-size: 2rem;
+            font-weight: 800;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            letter-spacing: -1px;
+        }
+        
+        .logo i {
+            margin-left: 10px;
+            color: var(--primary);
+            font-size: 1.8rem;
+        }
+        
+        .logo span {
+            color: var(--primary);
+        }
+        
+        nav ul {
+            display: flex;
+            list-style: none;
+        }
+        
+        nav ul li {
+            margin-right: 2.5rem;
+            position: relative;
+        }
+        
+        nav ul li a {
+            color: white;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s;
+            position: relative;
+            padding-bottom: 8px;
+            font-size: 1.1rem;
+        }
+        
+        nav ul li a::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 3px;
+            background: var(--primary);
+            bottom: 0;
+            right: 0;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        
+        nav ul li a:hover::after {
+            width: 100%;
+            left: 0;
+        }
+        
+        nav ul li a:hover {
+            color: var(--primary);
+        }
+        
+        .nav-buttons {
+            display: flex;
+            gap: 1rem;
+        }
+        
+        .nav-btn {
+            padding: 0.6rem 1.5rem;
+            border-radius: 50px;
+            font-weight: 600;
+            transition: all 0.3s;
+            text-decoration: none;
+        }
+        
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+            border: 2px solid var(--primary);
+        }
+        
+        .btn-primary:hover {
+            background: transparent;
+            color: var(--primary);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(255, 107, 53, 0.3);
+        }
+        
+        .btn-outline {
+            border: 2px solid white;
+            color: white;
+        }
+        
+        .btn-outline:hover {
+            background: white;
+            color: var(--dark);
+            transform: translateY(-3px);
+        }
+        
+        /* منوی موبایل */
+        .mobile-menu-btn {
+            display: none;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.8rem;
+            cursor: pointer;
+        }
+        
+        /* بخش Hero پیشرفته */
+        .hero {
+            height: 100vh;
+            background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), 
+                        url('https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1794&q=80') no-repeat center center/cover;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(0, 78, 137, 0.4) 0%, rgba(255, 107, 53, 0.4) 100%);
+            z-index: 1;
+        }
+        
+        .hero-content {
+            max-width: 900px;
+            padding: 0 20px;
+            position: relative;
+            z-index: 2;
+            transform: translateY(20px);
+            opacity: 0;
+            animation: fadeInUp 1s 0.3s forwards;
+        }
+        
+        .hero h1 {
+            font-size: 4rem;
+            margin-bottom: 1.5rem;
+            text-shadow: 2px 2px 10px rgba(0, 0, 0, 0.5);
+            line-height: 1.2;
+        }
+        
+        .hero p {
+            font-size: 1.3rem;
+            margin-bottom: 2.5rem;
+            opacity: 0.9;
+        }
+        
+        .hero-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 15px 35px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 700;
+            transition: all 0.4s;
+            border: 2px solid transparent;
+            font-size: 1.1rem;
+        }
+        
+        .btn-lg {
+            padding: 18px 40px;
+            font-size: 1.2rem;
+        }
+        
+        .hero .btn-primary {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 10px 30px rgba(255, 107, 53, 0.4);
+        }
+        
+        .hero .btn-primary:hover {
+            background: transparent;
+            border-color: white;
+            color: white;
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(255, 107, 53, 0.6);
+        }
+        
+        .hero .btn-outline {
+            border: 2px solid white;
+            color: white;
+        }
+        
+        .hero .btn-outline:hover {
+            background: white;
+            color: var(--dark);
+            transform: translateY(-5px);
+        }
+        
+        .hero-scroll-down {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 2;
+            color: white;
+            font-size: 1.5rem;
+            animation: bounce 2s infinite;
+            cursor: pointer;
+        }
+        
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% {
+                transform: translateY(0) translateX(-50%);
+            }
+            40% {
+                transform: translateY(-20px) translateX(-50%);
+            }
+            60% {
+                transform: translateY(-10px) translateX(-50%);
+            }
+        }
+        
+        /* بخش آمار و ارقام */
+        .stats-section {
+            padding: 5rem 0;
+            background: var(--secondary);
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .stats-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('https://www.transparenttextures.com/patterns/dark-stripes.png');
+            opacity: 0.1;
+            z-index: 1;
+        }
+        
+        .stats-container {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            max-width: 1200px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 2;
+        }
+        
+        .stat-item {
+            text-align: center;
+            padding: 2rem;
+            min-width: 250px;
+        }
+        
+        .stat-number {
+            font-size: 4rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+            color: var(--primary);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .stat-number span {
+            font-size: 2.5rem;
+            margin-left: 5px;
+        }
+        
+        .stat-label {
+            font-size: 1.2rem;
+            font-weight: 600;
+            opacity: 0.9;
+        }
+        
+        /* بخش معرفی پیشرفته */
+        .intro-section {
+            padding: 8rem 10%;
+            background: white;
+        }
+        
+        .section-header {
+            text-align: center;
+            margin-bottom: 5rem;
+            position: relative;
+        }
+        
+        .section-title {
+            font-size: 2.8rem;
+            color: var(--dark);
+            margin-bottom: 1.5rem;
+            position: relative;
+            display: inline-block;
+        }
+        
+        .section-title::after {
+            content: '';
+            position: absolute;
+            width: 80px;
+            height: 4px;
+            background: var(--primary);
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-radius: 2px;
+        }
+        
+        .section-subtitle {
+            font-size: 1.3rem;
+            color: #555;
+            max-width: 700px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+        
+        .intro-content {
+            display: flex;
+            align-items: center;
+            gap: 5rem;
+            margin-top: 4rem;
+        }
+        
+        .intro-text {
+            flex: 1;
+        }
+        
+        .intro-text h3 {
+            font-size: 2.2rem;
+            margin-bottom: 1.8rem;
+            color: var(--secondary);
+            line-height: 1.3;
+        }
+        
+        .intro-text p {
+            margin-bottom: 1.8rem;
+            color: #555;
+            font-size: 1.1rem;
+            line-height: 1.8;
+        }
+        
+        .intro-features {
+            margin-top: 2rem;
+        }
+        
+        .feature-item {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 1.5rem;
+        }
+        
+        .feature-icon {
+            color: var(--primary);
+            font-size: 1.5rem;
+            margin-left: 1rem;
+            margin-top: 3px;
+        }
+        
+        .feature-text h4 {
+            font-size: 1.2rem;
+            margin-bottom: 0.3rem;
+            color: var(--dark);
+        }
+        
+        .feature-text p {
+            margin-bottom: 0;
+            color: #666;
+            font-size: 1rem;
+        }
+        
+        .intro-image {
+            flex: 1;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+            transition: all 0.5s cubic-bezier(0.215, 0.61, 0.355, 1);
+            position: relative;
+            height: 500px;
+        }
+        
+        .intro-image:hover {
+            transform: translateY(-10px) rotate(1deg);
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.2);
+        }
+        
+        .intro-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+        
+        /* بخش تورهای مجازی پیشرفته */
+        .tours-section {
+            padding: 8rem 10%;
+            background: var(--light);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .tabs {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 3rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        
+        .tab-btn {
+            padding: 0.8rem 2rem;
+            border-radius: 50px;
+            background: white;
+            color: var(--dark);
+            border: 1px solid #ddd;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        }
+        
+        .tab-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+            box-shadow: 0 5px 20px rgba(255, 107, 53, 0.3);
+        }
+        
+        .tab-btn:hover:not(.active) {
+            background: #f0f0f0;
+        }
+        
+        .tours-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 2.5rem;
+            margin-top: 3rem;
+        }
+        
+        .tour-card {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+            transition: all 0.5s cubic-bezier(0.215, 0.61, 0.355, 1);
+            position: relative;
+        }
+        
+        .tour-card:hover {
+            transform: translateY(-15px);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+        }
+        
+        .tour-image {
+            height: 250px;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .tour-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.8s;
+        }
+        
+        .tour-card:hover .tour-image img {
+            transform: scale(1.1);
+        }
+        
+        .tour-badge {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: var(--primary);
+            color: white;
+            padding: 0.5rem 1.5rem;
+            border-radius: 50px;
+            font-size: 0.9rem;
+            font-weight: 700;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .tour-content {
+            padding: 1.8rem;
+        }
+        
+        .tour-title {
+            font-size: 1.5rem;
+            margin-bottom: 0.8rem;
+            color: var(--dark);
+        }
+        
+        .tour-description {
+            color: #666;
+            margin-bottom: 1.5rem;
+            line-height: 1.6;
+        }
+        
+        .tour-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid #eee;
+        }
+        
+        .tour-price {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+        
+        .tour-price span {
+            font-size: 0.9rem;
+            color: #888;
+            font-weight: normal;
+            margin-right: 5px;
+        }
+        
+        .tour-rating {
+            display: flex;
+            align-items: center;
+            color: #FFC107;
+        }
+        
+        .tour-rating span {
+            color: #777;
+            margin-right: 5px;
+            font-size: 0.9rem;
+        }
+        
+        /* بخش تور ویژه VR */
+        .featured-tour {
+            margin-top: 5rem;
+            background: linear-gradient(135deg, var(--secondary) 0%, var(--dark) 100%);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.2);
+            display: flex;
+            align-items: center;
+            color: white;
+            position: relative;
+            height: 500px;
+        }
+        
+        .featured-tour::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('https://www.transparenttextures.com/patterns/diagmonds.png');
+            opacity: 0.1;
+        }
+        
+        .featured-tour-content {
+            flex: 1;
+            padding: 4rem;
+            position: relative;
+            z-index: 2;
+        }
+        
+        .featured-tour-badge {
+            display: inline-block;
+            background: var(--primary);
+            color: white;
+            padding: 0.5rem 1.5rem;
+            border-radius: 50px;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            font-size: 0.9rem;
+        }
+        
+        .featured-tour-title {
+            font-size: 2.5rem;
+            margin-bottom: 1.5rem;
+            line-height: 1.3;
+        }
+        
+        .featured-tour-description {
+            margin-bottom: 2rem;
+            font-size: 1.1rem;
+            line-height: 1.8;
+            opacity: 0.9;
+            max-width: 600px;
+        }
+        
+        .featured-tour-image {
+            flex: 1;
+            height: 100%;
+            position: relative;
+        }
+        
+        .featured-tour-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .featured-tour-stats {
+            display: flex;
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+        
+        .featured-stat {
+            display: flex;
+            align-items: center;
+        }
+        
+        .featured-stat-icon {
+            font-size: 1.8rem;
+            color: var(--primary);
+            margin-left: 1rem;
+        }
+        
+        .featured-stat-text h4 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 0.3rem;
+        }
+        
+        .featured-stat-text p {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+        
+        /* بخش نقشه تعاملی */
+        .map-section {
+            padding: 8rem 10%;
+            background: white;
+        }
+        
+        .map-container {
+            margin-top: 5rem;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            height: 600px;
+            position: relative;
+        }
+        
+        #iran-map {
+            height: 100%;
+            width: 100%;
+        }
+        
+        .map-overlay {
+            position: absolute;
+            bottom: 30px;
+            right: 30px;
+            background: white;
+            padding: 1.5rem;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            max-width: 300px;
+        }
+        
+        .map-overlay h3 {
+            margin-bottom: 1rem;
+            color: var(--secondary);
+        }
+        
+        .map-overlay p {
+            color: #666;
+            line-height: 1.6;
+        }
+        
+        /* بخش گالری */
+        .gallery-section {
+            padding: 8rem 10%;
+            background: var(--light);
+        }
+        
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-top: 3rem;
+        }
+        
+        .gallery-item {
+            border-radius: 15px;
+            overflow: hidden;
+            position: relative;
+            height: 250px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .gallery-item:hover {
+            transform: scale(1.03);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+        }
+        
+        .gallery-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s;
+        }
+        
+        .gallery-item:hover img {
+            transform: scale(1.1);
+        }
+        
+        .gallery-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            padding: 1.5rem;
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.8), transparent);
+            color: white;
+            opacity: 0;
+            transition: all 0.3s;
+        }
+        
+        .gallery-item:hover .gallery-overlay {
+            opacity: 1;
+        }
+        
+        .gallery-overlay h3 {
+            margin-bottom: 0.5rem;
+            transform: translateY(20px);
+            transition: all 0.3s;
+        }
+        
+        .gallery-overlay p {
+            transform: translateY(20px);
+            transition: all 0.3s 0.1s;
+            opacity: 0.9;
+        }
+        
+        .gallery-item:hover .gallery-overlay h3,
+        .gallery-item:hover .gallery-overlay p {
+            transform: translateY(0);
+        }
+        
+        /* بخش نظرات کاربران */
+        .testimonials-section {
+            padding: 8rem 10%;
+            background: white;
+        }
+        
+        .testimonials-container {
+            margin-top: 5rem;
+            position: relative;
+        }
+        
+        .testimonial-slide {
+            background: var(--light);
+            border-radius: 20px;
+            padding: 3rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+            margin: 0 1rem;
+            position: relative;
+        }
+        
+        .testimonial-quote {
+            font-size: 1.2rem;
+            line-height: 1.8;
+            color: #555;
+            margin-bottom: 2rem;
+            position: relative;
+        }
+        
+        .testimonial-quote::before {
+            content: '"';
+            font-size: 5rem;
+            position: absolute;
+            top: -20px;
+            right: -10px;
+            color: rgba(0, 78, 137, 0.1);
+            font-family: Georgia, serif;
+            line-height: 1;
+        }
+        
+        .testimonial-author {
+            display: flex;
+            align-items: center;
+        }
+        
+        .author-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            overflow: hidden;
+            margin-left: 1.5rem;
+            border: 3px solid var(--primary);
+        }
+        
+        .author-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .author-info h4 {
+            font-size: 1.2rem;
+            color: var(--dark);
+            margin-bottom: 0.3rem;
+        }
+        
+        .author-info p {
+            color: #777;
+            font-size: 0.9rem;
+        }
+        
+        /* بخش تماس با ما */
+        .contact-section {
+            padding: 8rem 10%;
+            background: linear-gradient(135deg, var(--light) 0%, #e6f0f7 100%);
+        }
+        
+        .contact-container {
+            display: flex;
+            margin-top: 5rem;
+            background: white;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+        
+        .contact-info {
+            flex: 1;
+            padding: 4rem;
+            background: var(--secondary);
+            color: white;
+        }
+        
+        .contact-info h3 {
+            font-size: 1.8rem;
+            margin-bottom: 2rem;
+            position: relative;
+            padding-bottom: 1rem;
+        }
+        
+        .contact-info h3::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 50px;
+            height: 3px;
+            background: var(--primary);
+        }
+        
+        .contact-info-item {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 2rem;
+        }
+        
+        .contact-info-icon {
+            font-size: 1.5rem;
+            color: var(--primary);
+            margin-left: 1.5rem;
+            margin-top: 5px;
+        }
+        
+        .contact-info-content h4 {
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .contact-info-content p {
+            opacity: 0.9;
+            line-height: 1.6;
+        }
+        
+        .contact-social {
+            display: flex;
+            gap: 1rem;
+            margin-top: 3rem;
+        }
+        
+        .contact-social a {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 1.2rem;
+            transition: all 0.3s;
+        }
+        
+        .contact-social a:hover {
+            background: var(--primary);
+            transform: translateY(-3px);
+        }
+        
+        .contact-form {
+            flex: 1;
+            padding: 4rem;
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--dark);
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 1rem;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+        
+        .form-control:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.2);
+            outline: none;
+        }
+        
+        textarea.form-control {
+            min-height: 150px;
+            resize: vertical;
+        }
+        
+        .submit-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 1rem 2.5rem;
+            border-radius: 50px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 1.1rem;
+            margin-top: 1rem;
+        }
+        
+        .submit-btn:hover {
+            background: #e05a2b;
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(255, 107, 53, 0.3);
+        }
+        
+        /* فوتر پیشرفته */
+        footer {
+            background: var(--dark);
+            color: white;
+            padding: 6rem 10% 3rem;
+            position: relative;
+        }
+        
+        .footer-wave {
+            position: absolute;
+            top: -100px;
+            left: 0;
+            width: 100%;
+            height: 100px;
+            background: url('data:image/svg+xml;utf8,<svg viewBox="0 0 1200 120" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none"><path d="M0,0V46.29c47.79,22.2,103.59,32.17,158,28,70.36-5.37,136.33-33.31,206.8-37.5C438.64,32.43,512.34,53.67,583,72.05c69.27,18,138.3,24.88,209.4,13.08,36.15-6,69.85-17.84,104.45-29.34C989.49,25,1113-14.29,1200,52.47V0Z" fill="%231A1A1A" opacity=".25"/><path d="M0,0V15.81C13,36.92,27.64,56.86,47.69,72.05,99.41,111.27,165,111,224.58,91.58c31.15-10.15,60.09-26.07,89.67-39.8,40.92-19,84.73-46,130.83-49.67,36.26-2.85,70.9,9.42,98.6,31.56,31.77,25.39,62.32,62,103.63,73,40.44,10.79,81.35-6.69,119.13-24.28s75.16-39,116.92-43.05c59.73-5.85,113.28,22.88,168.9,38.84,30.2,8.66,59,6.17,87.09-7.5,22.43-10.89,48-26.93,60.65-49.24V0Z" fill="%231A1A1A"/></svg>');
+            background-size: cover;
+        }
+        
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 4rem;
+            margin-bottom: 4rem;
+            position: relative;
+            z-index: 2;
+        }
+        
+        .footer-column h3 {
+            font-size: 1.5rem;
+            margin-bottom: 2rem;
+            position: relative;
+            padding-bottom: 1rem;
+        }
+        
+        .footer-column h3::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 50px;
+            height: 3px;
+            background: var(--primary);
+        }
+        
+        .footer-about p {
+            color: #bbb;
+            margin-bottom: 2rem;
+            line-height: 1.8;
+        }
+        
+        .footer-links {
+            list-style: none;
+        }
+        
+        .footer-links li {
+            margin-bottom: 1rem;
+        }
+        
+        .footer-links a {
+            color: #bbb;
+            text-decoration: none;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+        }
+        
+        .footer-links a i {
+            margin-left: 10px;
+            color: var(--primary);
+            font-size: 0.8rem;
+            transition: all 0.3s;
+        }
+        
+        .footer-links a:hover {
+            color: white;
+            padding-right: 5px;
+        }
+        
+        .footer-links a:hover i {
+            margin-left: 15px;
+        }
+        
+        .footer-contact p {
+            color: #bbb;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: flex-start;
+        }
+        
+        .footer-contact i {
+            margin-left: 10px;
+            color: var(--primary);
+            margin-top: 5px;
+        }
+        
+        .footer-newsletter p {
+            color: #bbb;
+            margin-bottom: 1.5rem;
+        }
+        
+        .newsletter-form {
+            display: flex;
+        }
+        
+        .newsletter-input {
+            flex: 1;
+            padding: 0.8rem 1rem;
+            border: none;
+            border-radius: 50px 0 0 50px;
+            font-size: 1rem;
+            outline: none;
+        }
+        
+        .newsletter-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 0 1.5rem;
+            border-radius: 0 50px 50px 0;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .newsletter-btn:hover {
+            background: #e05a2b;
+        }
+        
+        .footer-bottom {
+            text-align: center;
+            padding-top: 3rem;
+            border-top: 1px solid #333;
+            color: #777;
+            font-size: 0.9rem;
+            position: relative;
+            z-index: 2;
+        }
+        
+        /* انیمیشن‌ها */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        /* رسپانسیو */
+        @media (max-width: 1200px) {
+            .intro-content,
+            .contact-container {
+                flex-direction: column;
+            }
+            
+            .intro-image,
+            .featured-tour-image {
+                margin-top: 3rem;
+            }
+            
+            .featured-tour {
+                height: auto;
+                flex-direction: column-reverse;
+            }
+            
+            .featured-tour-content {
+                padding: 3rem 2rem;
+            }
+        }
+        
+        @media (max-width: 992px) {
+            .hero h1 {
+                font-size: 3rem;
+            }
+            
+            .section-title {
+                font-size: 2.3rem;
+            }
+            
+            .nav-buttons {
+                display: none;
+            }
+            
+            .mobile-menu-btn {
+                display: block;
+            }
+            
+            nav ul {
+                position: fixed;
+                top: 80px;
+                right: -100%;
+                width: 80%;
+                max-width: 300px;
+                background: var(--secondary);
+                flex-direction: column;
+                align-items: center;
+                padding: 2rem 0;
+                border-radius: 0 0 0 20px;
+                transition: all 0.5s ease;
+                box-shadow: -5px 5px 20px rgba(0, 0, 0, 0.2);
+                z-index: 999;
+            }
+            
+            nav ul.active {
+                right: 0;
+            }
+            
+            nav ul li {
+                margin: 1rem 0;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+            
+            .hero p {
+                font-size: 1.1rem;
+            }
+            
+            .hero-buttons {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            .btn {
+                width: 100%;
+                text-align: center;
+            }
+            
+            .stats-container {
+                flex-direction: column;
+            }
+            
+            .stat-item {
+                margin-bottom: 2rem;
+            }
+            
+            .tours-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .gallery-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .section-title {
+                font-size: 2rem;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            .hero h1 {
+                font-size: 2rem;
+            }
+            
+            .section-header {
+                margin-bottom: 3rem;
+            }
+            
+            .section-title {
+                font-size: 1.8rem;
+            }
+            
+            .section-subtitle {
+                font-size: 1rem;
+            }
+            
+            .featured-tour-title {
+                font-size: 1.8rem;
+            }
+            
+            .contact-info,
+            .contact-form {
+                padding: 2rem;
+            }
+            
+            .footer-content {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- هدر -->
+    <header id="header">
+        <a href="#" class="logo">ایران<span>360°</span> <i class="fas fa-vr-cardboard"></i></a>
+        
+        <nav>
+            <ul id="nav-menu">
+                <li><a href="#home">خانه</a></li>
+                <li><a href="#about">درباره ما</a></li>
+                <li><a href="#tours">تورهای مجازی</a></li>
+                <li><a href="#gallery">گالری</a></li>
+                <li><a href="#map">نقشه</a></li>
+                <li><a href="#contact">تماس</a></li>
+            </ul>
+        </nav>
+        
+        <div class="nav-buttons">
+            <a href="#" class="nav-btn btn-outline">ورود</a>
+            <a href="#" class="nav-btn btn-primary">ثبت نام</a>
+        </div>
+        
+        <button class="mobile-menu-btn" id="mobile-menu-btn">
+            <i class="fas fa-bars"></i>
+        </button>
+    </header>
+
+    <!-- بخش Hero -->
+    <section class="hero" id="home">
+        <div class="hero-content">
+            <h1>کشف زیبایی‌های ایران با واقعیت مجازی</h1>
+            <p>با فناوری پیشرفته VR، از جاذبه‌های تاریخی و طبیعی ایران دیدن کنید. تجربه‌ای فراموش‌نشدنی در 360 درجه!</p>
+            <div class="hero-buttons">
+                <a href="#tours" class="btn btn-primary btn-lg">شروع تور مجازی</a>
+                <a href="#about" class="btn btn-outline">درباره پروژه</a>
+            </div>
+        </div>
+        
+        <a href="#about" class="hero-scroll-down">
+            <i class="fas fa-chevron-down"></i>
+        </a>
+    </section>
+
+    <!-- بخش آمار و ارقام -->
+    <section class="stats-section">
+        <div class="stats-container">
+            <div class="stat-item">
+                <div class="stat-number">120<span>+</span></div>
+                <div class="stat-label">جاذبه گردشگری</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">35<span>K</span></div>
+                <div class="stat-label">بازدیدکننده ماهانه</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">8<span>K</span></div>
+                <div class="stat-label">تصویر 360 درجه</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">24</div>
+                <div class="stat-label">استان تحت پوشش</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- بخش معرفی -->
+    <section class="intro-section" id="about">
+        <div class="section-header">
+            <h2 class="section-title">ایران را مثل nunca antes ببینید</h2>
+            <p class="section-subtitle">با فناوری پیشرفته واقعیت مجازی، به عمق زیبایی‌های ایران سفر کنید. از کویر لوت تا جنگل‌های شمال، همه را در 360 درجه تجربه کنید.</p>
+        </div>
+        
+        <div class="intro-content">
+            <div class="intro-text">
+                <h3>تجربه‌ای منحصر به فرد از سفر مجازی</h3>
+                <p>ایران 360° با استفاده از پیشرفته‌ترین تکنولوژی‌های واقعیت مجازی، این امکان را فراهم کرده است که بدون خارج شدن از خانه، زیباترین جاذبه‌های گردشگری ایران را کشف کنید.</p>
+                <p>ما با تیمی از عکاسان حرفه‌ای و متخصصان VR، بیش از 100 نقطه دیدنی ایران را به صورت 360 درجه و با کیفیت 8K ثبت کرده‌ایم تا شما تجربه‌ای نزدیک به واقعیت داشته باشید.</p>
+                
+                <div class="intro-features">
+                    <div class="feature-item">
+                        <div class="feature-icon">
+                            <i class="fas fa-vr-cardboard"></i>
+                        </div>
+                        <div class="feature-text">
+                            <h4>تجربه VR کامل</h4>
+                            <p>قابلیت مشاهده با هدست‌های واقعیت مجازی برای تجربه‌ای غوطه‌ورانه</p>
+                        </div>
+                    </div>
+                    
+                    <div class="feature-item">
+                        <div class="feature-icon">
+                            <i class="fas fa-map-marked-alt"></i>
+                        </div>
+                        <div class="feature-text">
+                            <h4>نقشه تعاملی</h4>
+                            <p>مسیریابی هوشمند و نمایش جاذبه‌های اطراف هر مکان</p>
+                        </div>
+                    </div>
+                    
+                    <div class="feature-item">
+                        <div class="feature-icon">
+                            <i class="fas fa-headset"></i>
+                        </div>
+                        <div class="feature-text">
+                            <h4>راهنمای صوتی</h4>
+                            <p>توضیحات حرفه‌ای با صدای گویندگان معروف برای هر جاذبه</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="intro-image">
+                <img src="https://images.unsplash.com/photo-1631729371254-42c2892f0e6e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80" alt="نمونه تور مجازی">
+            </div>
+        </div>
+    </section>
+
+    <!-- بخش تورهای مجازی -->
+    <section class="tours-section" id="tours">
+        <div class="section-header">
+            <h2 class="section-title">تورهای مجازی ما</h2>
+            <p class="section-subtitle">از میان بهترین تورهای مجازی ایران انتخاب کنید و سفری خاطره‌انگیز را تجربه نمایید.</p>
+        </div>
+        
+        <div class="tabs">
+            <button class="tab-btn active">همه تورها</button>
+            <button class="tab-btn">تاریخی</button>
+            <button class="tab-btn">طبیعی</button>
+            <button class="tab-btn">مذهبی</button>
+            <button class="tab-btn">ویژه</button>
+        </div>
+        
+        <div class="tours-grid">
+            <!-- تور 1 -->
+            <div class="tour-card">
+                <div class="tour-image">
+                    <img src="https://images.unsplash.com/photo-1560843736-8b2f7a1a1b8a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80" alt="میدان نقش جهان">
+                    <span class="tour-badge">پرطرفدار</span>
+                </div>
+                <div class="tour-content">
+                    <h3 class="tour-title">میدان نقش جهان اصفهان</h3>
+                    <p class="tour-description">تجربه قدم زدن در یکی از بزرگترین میدان‌های جهان با معماری خیره‌کننده صفوی و بازدید از مسجد شیخ لطف‌الله و عالی‌قاپو</p>
+                    <div class="tour-meta">
+                        <div class="tour-price">
+                            <span>رایگان</span>
+                        </div>
+                        <div class="tour-rating">
+                            <span>(۴.۸)</span>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star-half-alt"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- تور 2 -->
+            <div class="tour-card">
+                <div class="tour-image">
+                    <img src="https://images.unsplash.com/photo-1581055442244-6e13c1205c7e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80" alt="تخت جمشید">
+                    <span class="tour-badge">تاریخی</span>
+                </div>
+                <div class="tour-content">
+                    <h3 class="tour-title">تخت جمشید شیراز</h3>
+                    <p class="tour-description">بازدید از شکوه امپراتوری هخامنشیان با جزئیاتی که در بازدید واقعی نمی‌بینید و توضیحات اختصاصی باستان‌شناسان</p>
+                    <div class="tour-meta">
+                        <div class="tour-price">
+                            <span>رایگان</span>
+                        </div>
+                        <div class="tour-rating">
+                            <span>(۴.۹)</span>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- تور 3 -->
+            <div class="tour-card">
+                <div class="tour-image">
+                    <img src="https://images.unsplash.com/photo-1581852017103-68e8115e1e47?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80" alt="کلیسای وانک">
+                    <span class="tour-badge">مذهبی</span>
+                </div>
+                <div class="tour-content">
+                    <h3 class="tour-title">کلیسای وانک اصفهان</h3>
+                    <p class="tour-description">کشف هنر بی‌نظیر نقاشی‌های دیواری و معماری ارمنی‌های ایران در بزرگ‌ترین کلیسای ارامنه کشور</p>
+                    <div class="tour-meta">
+                        <div class="tour-price">
+                            <span>رایگان</span>
+                        </div>
+                        <div class="tour-rating">
+                            <span>(۴.۷)</span>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- تور 4 -->
+            <div class="tour-card">
+                <div class="tour-image">
+                    <img src="https://images.unsplash.com/photo-1580328227150-c2286a2baf05?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80" alt="دریاچه اوان">
+                    <span class="tour-badge">طبیعی</span>
+                </div>
+                <div class="tour-content">
+                    <h3 class="tour-title">دریاچه اوان قزوین</h3>
+                    <p class="tour-description">تجربه آرامش در یکی از زیباترین دریاچه‌های ایران با مناظر کوهستانی خیره‌کننده در چهار فصل سال</p>
+                    <div class="tour-meta">
+                        <div class="tour-price">
+                            <span>رایگان</span>
+                        </div>
+                        <div class="tour-rating">
+                            <span>(۴.۸)</span>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star-half-alt"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- تور 5 -->
+            <div class="tour-card">
+                <div class="tour-image">
+                    <img src="https://images.unsplash.com/photo-1621274403997-37aace184f49?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80" alt="برج میلاد">
+                    <span class="tour-badge">ویژه</span>
+                </div>
+                <div class="tour-content">
+                    <h3 class="tour-title">نمای 360° از برج میلاد</h3>
+                    <p class="tour-description">تماشای پانورامای شهر تهران از بلندترین برج ایران با امکان مشاهده نقاط شاخص شهر در روز و شب</p>
+                    <div class="tour-meta">
+                        <div class="tour-price">
+                            <span>رایگان</span>
+                        </div>
+                        <div class="tour-rating">
+                            <span>(۴.۹)</span>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- تور 6 -->
+            <div class="tour-card">
+                <div class="tour-image">
+                    <img src="https://images.unsplash.com/photo-1580328227150-c2286a2baf05?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80" alt="شهر یزد">
+                    <span class="tour-badge">تاریخی</span>
+                </div>
+                <div class="tour-content">
+                    <h3 class="tour-title">شهر تاریخی یزد</h3>
+                    <p class="tour-description">گشت‌وگذار در اولین شهر خشتی جهان با معماری منحصر به فرد و بازدید از بادگیرها و آب‌انبارهای تاریخی</p>
+                    <div class="tour-meta">
+                        <div class="tour-price">
+                            <span>رایگان</span>
+                        </div>
+                        <div class="tour-rating">
+                            <span>(۴.۷)</span>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star-half-alt"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- تور ویژه -->
+        <div class="featured-tour">
+            <div class="featured-tour-image">
+                <img src="https://images.unsplash.com/photo-1546443046-ed1ce6ffd1ab?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80" alt="تور ویژه">
+            </div>
+            
+            <div class="featured-tour-content">
+                <span class="featured-tour-badge">تور ویژه</span>
+                <h3 class="featured-tour-title">کلیسای سنت استپانوس در دل کوهستان</h3>
+                <p class="featured-tour-description">این تور ویژه شما را به یکی از ناشناخته‌ترین جاذبه‌های ایران می‌برد. کلیسای سنت استپانوس در استان آذربایجان شرقی، دومین کلیسای مهم ارامنه ایران است که در دل کوهستان و در کنار رود ارس قرار دارد.</p>
+                
+                <div class="featured-tour-stats">
+                    <div class="featured-stat">
+                        <div class="featured-stat-icon">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="featured-stat-text">
+                            <h4>مدت زمان</h4>
+                            <p>60 دقیقه</p>
+                        </div>
+                    </div>
+                    
+                    <div class="featured-stat">
+                        <div class="featured-stat-icon">
+                            <i class="fas fa-vr-cardboard"></i>
+                        </div>
+                        <div class="featured-stat-text">
+                            <h4>حالت نمایش</h4>
+                            <p>360° و VR</p>
+                        </div>
+                    </div>
+                    
+                    <div class="featured-stat">
+                        <div class="featured-stat-icon">
+                            <i class="fas fa-language"></i>
+                        </div>
+                        <div class="featured-stat-text">
+                            <h4>زبان‌ها</h4>
+                            <p>فارسی، انگلیسی</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <a href="#" class="btn btn-primary">شروع تور ویژه</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- بخش نقشه تعاملی -->
+    <section class="map-section" id="map">
+        <div class="section-header">
+            <h2 class="section-title">نقشه گردشگری ایران</h2>
+            <p class="section-subtitle">جاذبه‌های گردشگری ایران را بر روی نقشه کشف کنید و برای سفر بعدی خود برنامه‌ریزی نمایید.</p>
+        </div>
+        
+        <div class="map-container">
+            <div id="iran-map"></div>
+            <div class="map-overlay">
+                <h3>راهنمای نقشه</h3>
+                <p>بر روی نقاط قرمز رنگ کلیک کنید تا اطلاعات جاذبه‌های گردشگری را مشاهده نمایید و تورهای مجازی مربوطه را شروع کنید.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- بخش گالری -->
+    <section class="gallery-section" id="gallery">
+        <div class="section-header">
+            <h2 class="section-title">گالری تصاویر 360°</h2>
+            <p class="section-subtitle">نمونه‌هایی از تصاویر پانوراما و 360 درجه که در تورهای مجازی استفاده شده‌اند.</p>
+        </div>
+        
+        <div class="gallery-grid">
+            <div class="gallery-item">
+                <img src="https://images.unsplash.com/photo-1580328227150-c2286a2baf05?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80" alt="نمونه گالری">
+                <div class="gallery-overlay">
+                    <h3>مسجد نصیرالملک شیراز</h3>
+                    <p>شیشه‌های رنگی و نورپردازی خیره‌کننده</p>
+                </div>
+            </div>
+            
+            <div class="gallery-item">
+                <img src="https://images.unsplash.com/photo-1580328227150-c2286a2baf05?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80" alt="نمونه گالری">
+                <div class="gallery-overlay">
+                    <h3>کویر مرنجاب</h3>
+                    <p>تپه‌های شنی و آسمان پرستاره</p>
+                </div>
+            </div>
+            
+            <div class="gallery-item">
+                <img src="https://images.unsplash.com/photo-1580328227150-c2286a2baf05?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80" alt="نمونه گالری">
+                <div class="gallery-overlay">
+                    <h3>روستای ماسوله</h3>
+                    <p>معماری پلکانی و طبیعت سبز</p>
+                </div>
+            </div>
+            
+            <div class="gallery-item">
+                <img src="https://images.unsplash.com/photo-1580328227150-c2286a2baf05?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80" alt="نمونه گالری">
+                <div class="gallery-overlay">
+                    <h3>غار علیصدر</h3>
+                    <p>بزرگترین غار آبی جهان</p>
+                </div>
+            </div>
+            
+            <div class="gallery-item">
+                <img src="https://images.unsplash.com/photo-1580328227150-c2286a2baf05?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80" alt="نمونه گالری">
+                <div class="gallery-overlay">
+                    <h3>آرامگاه حافظ</h3>
+                    <p>حافظیه شیراز در شب</p>
+                </div>
+            </div>
+            
+            <div class="gallery-item">
+                <img src="https://images.unsplash.com/photo-1580328227150-c2286a2baf05?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80" alt="نمونه گالری">
+                <div class="gallery-overlay">
+                    <h3>دره ستاره‌ها</h3>
+                    <p>جزیره قشم - هرمزگان</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- بخش نظرات کاربران -->
+    <section class="testimonials-section">
+        <div class="section-header">
+            <h2 class="section-title">نظرات کاربران</h2>
+            <p class="section-subtitle">تجربیات کاربران از تورهای مجازی ایران 360°</p>
+        </div>
+        
+        <div class="testimonials-container">
+            <div class="testimonial-slide">
+                <p class="testimonial-quote">این سایت واقعاً انقلابی در صنعت گردشگری مجازی ایجاد کرده است. من که به دلیل مشکلات جسمانی نمی‌توانم سفر کنم، با این تورهای مجازی احساس می‌کنم واقعاً در مکان‌ها حضور دارم. کیفیت تصاویر و توضیحات بسیار عالی است.</p>
+                
+                <div class="testimonial-author">
+                    <div class="author-avatar">
+                        <img src="https://randomuser.me/api/portraits/women/32.jpg" alt="کاربر">
+                    </div>
+                    <div class="author-info">
+                        <h4>نرگس محمدی</h4>
+                        <p>تهران</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="testimonial-slide">
+                <p class="testimonial-quote">به عنوان یک معلم جغرافیا، از این سایت برای آموزش دانش‌آموزانم استفاده می‌کنم. امکان نمایش مکان‌های تاریخی و طبیعی ایران به صورت 360 درجه، درک بهتری از مفاهیم جغرافیایی به دانش‌آموزان می‌دهد.</p>
+                
+                <div class="testimonial-author">
+                    <div class="author-avatar">
+                        <img src="https://randomuser.me/api/portraits/men/75.jpg" alt="کاربر">
+                    </div>
+                    <div class="author-info">
+                        <h4>رضا حسینی</h4>
+                        <p>مشهد</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="testimonial-slide">
+                <p class="testimonial-quote">قبل از سفر به اصفهان، از طریق تور مجازی این سایت با جاذبه‌های شهر آشنا شدم و توانستم برنامه‌ریزی بهتری برای سفرم داشته باشم. واقعاً مفید و کاربردی بود.</p>
+                
+                <div class="testimonial-author">
+                    <div class="author-avatar">
+                        <img src="https://randomuser.me/api/portraits/women/68.jpg" alt="کاربر">
+                    </div>
+                    <div class="author-info">
+                        <h4>سارا احمدی</h4>
+                        <p>رشت</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- بخش تماس با ما -->
+    <section class="contact-section" id="contact">
+        <div class="section-header">
+            <h2 class="section-title">تماس با ما</h2>
+            <p class="section-subtitle">برای اطلاعات بیشتر، پیشنهادات و انتقادات با ما در ارتباط باشید.</p>
+        </div>
+        
+        <div class="contact-container">
+            <div class="contact-info">
+                <h3>اطلاعات تماس</h3>
+                
+                <div class="contact-info-item">
+                    <div class="contact-info-icon">
+                        <i class="fas fa-map-marker-alt"></i>
+                    </div>
+                    <div class="contact-info-content">
+                        <h4>آدرس</h4>
+                        <p>تهران، خیابان ولیعصر، پلاک 100، طبقه 5</p>
+                    </div>
+                </div>
+                
+                <div class="contact-info-item">
+                    <div class="contact-info-icon">
+                        <i class="fas fa-phone-alt"></i>
+                    </div>
+                    <div class="contact-info-content">
+                        <h4>تلفن</h4>
+                        <p>021-12345678</p>
+                    </div>
+                </div>
+                
+                <div class="contact-info-item">
+                    <div class="contact-info-icon">
+                        <i class="fas fa-envelope"></i>
+                    </div>
+                    <div class="contact-info-content">
+                        <h4>ایمیل</h4>
+                        <p>info@iran360.ir</p>
+                    </div>
+                </div>
+                
+                <div class="contact-social">
+                    <a href="#"><i class="fab fa-instagram"></i></a>
+                    <a href="#"><i class="fab fa-telegram"></i></a>
+                    <a href="#"><i class="fab fa-twitter"></i></a>
+                    <a href="#"><i class="fab fa-linkedin"></i></a>
+                </div>
+            </div>
+            
+            <div class="contact-form">
+                <h3>پیام به ما</h3>
+                <form>
+                    <div class="form-group">
+                        <label for="name">نام کامل</label>
+                        <input type="text" id="name" class="form-control" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="email">ایمیل</label>
+                        <input type="email" id="email" class="form-control" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="subject">موضوع</label>
+                        <input type="text" id="subject" class="form-control" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="message">پیام</label>
+                        <textarea id="message" class="form-control" required></textarea>
+                    </div>
+                    
+                    <button type="submit" class="submit-btn">ارسال پیام</button>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- فوتر -->
+    <footer>
+        <div class="footer-wave"></div>
+        
+        <div class="footer-content">
+            <div class="footer-column footer-about">
+                <h3>درباره ایران 360°</h3>
+                <p>ایران 360° با هدف معرفی جاذبه‌های بی‌نظیر ایران با استفاده از تکنولوژی روز دنیا تأسیس شده است تا تجربه‌ای منحصر به فرد از سفر مجازی را برای شما فراهم کند.</p>
+                <div class="footer-social">
+                    <a href="#"><i class="fab fa-instagram"></i></a>
+                    <a href="#"><i class="fab fa-telegram"></i></a>
+                    <a href="#"><i class="fab fa-twitter"></i></a>
+                    <a href="#"><i class="fab fa-youtube"></i></a>
+                </div>
+            </div>
+            
+            <div class="footer-column">
+                <h3>لینک‌های مفید</h3>
+                <ul class="footer-links">
+                    <li><a href="#home">خانه <i class="fas fa-chevron-left"></i></a></li>
+                    <li><a href="#about">درباره ما <i class="fas fa-chevron-left"></i></a></li>
+                    <li><a href="#tours">تورهای مجازی <i class="fas fa-chevron-left"></i></a></li>
+                    <li><a href="#gallery">گالری <i class="fas fa-chevron-left"></i></a></li>
+                    <li><a href="#map">نقشه گردشگری <i class="fas fa-chevron-left"></i></a></li>
+                    <li><a href="#contact">تماس با ما <i class="fas fa-chevron-left"></i></a></li>
+                </ul>
+            </div>
+            
+            <div class="footer-column footer-contact">
+                <h3>اطلاعات تماس</h3>
+                <p><i class="fas fa-map-marker-alt"></i> تهران، خیابان ولیعصر، پلاک 100</p>
+                <p><i class="fas fa-phone"></i> 021-12345678</p>
+                <p><i class="fas fa-envelope"></i> info@iran360.ir</p>
+                <p><i class="fas fa-clock"></i> شنبه تا چهارشنبه: 9 صبح تا 5 بعدازظهر</p>
+            </div>
+            
+            <div class="footer-column footer-newsletter">
+                <h3>خبرنامه</h3>
+                <p>برای دریافت جدیدترین تورهای مجازی و تخفیف‌های ویژه در خبرنامه ما عضو شوید.</p>
+                <form class="newsletter-form">
+                    <input type="email" placeholder="آدرس ایمیل" class="newsletter-input" required>
+                    <button type="submit" class="newsletter-btn"><i class="fas fa-paper-plane"></i></button>
+                </form>
+            </div>
+        </div>
+        
+        <div class="footer-bottom">
+            <p>تمامی حقوق برای ایران 360° محفوظ است © 1402 | طراحی و توسعه با <i class="fas fa-heart" style="color: var(--primary);"></i> در ایران</p>
+        </div>
+    </footer>
+
+    <!-- اسکریپت‌ها -->
+    <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
+    <script>
+        // منوی موبایل
+        const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+        const navMenu = document.getElementById('nav-menu');
+        
+        mobileMenuBtn.addEventListener('click', () => {
+            navMenu.classList.toggle('active');
+            mobileMenuBtn.innerHTML = navMenu.classList.contains('active') ? 
+                '<i class="fas fa-times"></i>' : '<i class="fas fa-bars"></i>';
+        });
+        
+        // تغییر استایل هدر هنگام اسکرول
+        window.addEventListener('scroll', () => {
+            const header = document.getElementById('header');
+            if (window.scrollY > 100) {
+                header.classList.add('header-scrolled');
+            } else {
+                header.classList.remove('header-scrolled');
+            }
+        });
+        
+        // انیمیشن اسکرول برای بخش‌ها
+        const sections = document.querySelectorAll('section');
+        
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = 1;
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, {
+            threshold: 0.1
+        });
+        
+        sections.forEach(section => {
+            section.style.opacity = 0;
+            section.style.transform = 'translateY(30px)';
+            section.style.transition = 'all 0.6s ease-out';
+            observer.observe(section);
+        });
+        
+        // تغییر تب‌های تورها
+        const tabBtns = document.querySelectorAll('.tab-btn');
+        
+        tabBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                tabBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                // در اینجا می‌توانید فیلتر کردن تورها را پیاده‌سازی کنید
+            });
+        });
+        
+        // راه�اندازی نقشه
+        const map = L.map('iran-map').setView([32.4279, 53.6880], 5);
+        
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+        
+        // اضافه کردن نشانگرها برای جاذبه‌های گردشگری
+        const attractions = [
+            {
+                name: "میدان نقش جهان",
+                location: [32.6576, 51.6775],
+                type: "historical"
+            },
+            {
+                name: "تخت جمشید",
+                location: [29.9350, 52.8915],
+                type: "historical"
+            },
+            {
+                name: "برج میلاد",
+                location: [35.7448, 51.3753],
+                type: "modern"
+            },
+            {
+                name: "دریاچه اوان",
+                location: [36.2869, 50.5250],
+                type: "natural"
+            },
+            {
+                name: "کلیسای وانک",
+                location: [32.6344, 51.6547],
+                type: "religious"
+            }
+        ];
+        
+        
+        attractions.forEach(attraction => {
+            const marker = L.marker(attraction.location).addTo(map);
+            marker.bindPopup(`<b>${attraction.name}</b><br><a href="#tours" style="color: var(--primary);">مشاهده تور مجازی</a>`);
+        });
+        
+        
+        // شبیه‌سازی اسلایدر نظرات
+        let currentTestimonial = 0;
+        const testimonials = document.querySelectorAll('.testimonial-slide');
+        
+        function showTestimonial(index) {
+            testimonials.forEach((testimonial, i) => {
+                testimonial.style.display = i === index ? 'block' : 'none';
+            });
+        }
+        
+        // ابتدا همه را مخفی می‌کنیم جز اولین مورد
+        showTestimonial(currentTestimonial);
+        
+        
+        // برای نسخه کامل می‌توانید از کتابخانه‌هایی مانند Swiper.js استفاده کنید
+    </script>
+</body>
+</html>
